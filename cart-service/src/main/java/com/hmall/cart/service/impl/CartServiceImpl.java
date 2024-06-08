@@ -5,6 +5,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmall.cart.client.ItemClient;
 import com.hmall.cart.domain.dto.CartFormDTO;
 import com.hmall.cart.domain.dto.ItemDTO;
 import com.hmall.cart.domain.po.Cart;
@@ -46,7 +47,7 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
 
     private final RestTemplate restTemplate;
 
-    private final DiscoveryClient discoveryClient;
+    private final ItemClient itemClient;
 
     @Override
     public void addItem2Cart(CartFormDTO cartFormDTO) {
@@ -94,23 +95,7 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         Set<Long> itemIds = vos.stream().map(CartVO::getItemId).collect(Collectors.toSet());
         // 2.查询商品
         // 2.1 根据服务名称获取服务的实例列表
-        List<ServiceInstance> instances = discoveryClient.getInstances("item-service");
-        if(CollUtil.isEmpty(instances)){
-            return;
-        }
-        ServiceInstance instance = instances.get(RandomUtil.randomInt(instances.size()));
-        ResponseEntity<List<ItemDTO>> response = restTemplate.exchange(
-                 instance.getUri() + "/items?ids={ids}",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<ItemDTO>>() {
-                },
-                Map.of("ids", CollUtils.join(itemIds, ","))
-        );
-        if(!response.getStatusCode().is2xxSuccessful()){
-            return;
-        }
-        List<ItemDTO> items = response.getBody();
+        List<ItemDTO> items = itemClient.queryItemByIds(itemIds);
         if (CollUtils.isEmpty(items)) {
             return;
         }
