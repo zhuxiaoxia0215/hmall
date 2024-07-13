@@ -15,7 +15,7 @@ hm:
     database: hm-cart
   swagger:
     title: "黑马商城购物车服务接口文档"
-    package: com.hmall.cart.controlle
+    package: com.hmall.cart.controller
 spring:
   cloud:
     sentinel:
